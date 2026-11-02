@@ -5,6 +5,7 @@
 ## رابط البرنامج
 
 https://ayeshashadi5-sudo.github.io/TQM-easy/
+https://oshasa.github.io/TQM-easy/
 
 ## التشغيل
 
