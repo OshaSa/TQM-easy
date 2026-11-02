@@ -81,6 +81,7 @@ const db=(()=>{
 const cfg=window.TQM_CONFIG||{};
 if(!cfg.SUPABASE_URL||!cfg.SUPABASE_ANON_KEY||cfg.SUPABASE_URL.includes('YOUR_')||!window.supabase)return null;
 const sb=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY);
+const tqmErr=(c,e)=>{let b=document.getElementById('tqmerr');if(!b){b=document.createElement('div');b.id='tqmerr';b.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#b42318;color:#fff;padding:10px 14px;font:13px/1.5 monospace;direction:ltr;white-space:pre-wrap';document.body.appendChild(b)}b.textContent='Supabase error ['+c+']: '+(e.message||JSON.stringify(e))+(e.hint?' | '+e.hint:'')};
 const T='docs',snap=r=>({exists:!!r,id:r?.id,data:()=>r?r.data:undefined});
 const docRef=p=>{const i=p.indexOf('/'),c=p.slice(0,i),id=p.slice(i+1);return{
 async get(){const{data,error}=await sb.from(T).select('id,data').eq('collection',c).eq('id',id).maybeSingle();if(error)throw error;return snap(data)},
@@ -91,7 +92,7 @@ async delete(){const{error}=await sb.from(T).delete().eq('collection',c).eq('id'
 const uid=()=>(crypto.randomUUID?crypto.randomUUID().replace(/-/g,'').slice(0,20):Math.random().toString(36).slice(2)+Date.now().toString(36));
 return{doc:docRef,collection:c=>({
 async add(v){const id=uid();await docRef(c+'/'+id).set(v);return{id}},
-onSnapshot(f){const load=async()=>{const{data,error}=await sb.from(T).select('id,data').eq('collection',c);if(error){console.error(error);return}f({docs:data.map(r=>({id:r.id,data:()=>r.data}))})};
+onSnapshot(f){const load=async()=>{const{data,error}=await sb.from(T).select('id,data').eq('collection',c);if(error){console.error(error);tqmErr(c,error);return}f({docs:data.map(r=>({id:r.id,data:()=>r.data}))})};
 load();let t=0;const again=()=>{clearTimeout(t);t=setTimeout(load,150)};
 sb.channel('rt-'+c+'-'+uid()).on('postgres_changes',{event:'*',schema:'public',table:T,filter:'collection=eq.'+c},again).subscribe();
 setInterval(load,30000);return()=>{}}})}
@@ -331,3 +332,4 @@ await db.doc('users/'+u.id).update(x);hist('','','مستخدم '+u.name,f,f==='p
 draw();
 })();
 </script><div id="dlg"></div></body></html>
+
